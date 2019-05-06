@@ -48,7 +48,7 @@ class Client:
     alias = ''
 
     def sendMsg(self):
-        while not self.shutdown:
+        while True:
             if not self.join:
                 self.sock.send(("[" + self.alias + "] => join chat ").encode("utf-8"))
                 self.join = True
@@ -60,9 +60,8 @@ class Client:
 
                 time.sleep(0.2)
             except:
-                pass
-                #self.sock.send(("[" + self.alias + "] <= left chat ").encode("utf-8"))
-                #self.shutdown = True
+                self.sock.send(("[" + self.alias + "] <= left chat ").encode("utf-8"))
+                # self.shutdown = True
             # raise
 
         # self.sock.send(("[" + self.alias + "] :: " + input("")).encode("utf-8"))
