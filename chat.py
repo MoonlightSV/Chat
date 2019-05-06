@@ -60,7 +60,8 @@ class Client:
 
                 time.sleep(0.2)
             except:
-                self.sock.send(("[" + self.alias + "] <= left chat ").encode("utf-8"))
+                pass
+                # self.sock.send(("[" + self.alias + "] <= left chat ").encode("utf-8"))
                 # self.shutdown = True
             # raise
 
