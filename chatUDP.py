@@ -45,7 +45,7 @@ class Client:
         while not self.shutdown:
             try:
                 while True:
-                    data, addr = self.sock.recvfrom(1024)
+                    data = self.sock.recv(1024)
                     print(data.decode("utf-8"))
 
                     time.sleep(0.2)
@@ -63,17 +63,17 @@ class Client:
 
         while not self.shutdown:
             if not self.join:
-                self.sock.sendto(("[" + self.alias + "] => join chat ").encode("utf-8"), self.server)
+                self.sock.send(("[" + self.alias + "] => join chat ").encode("utf-8"))
                 self.join = True
             else:
                 try:
                     message = input()
                     if message != "":
-                        self.sock.sendto(("[" + self.alias + "] :: " + message).encode("utf-8"), self.server)
+                        self.sock.send(("[" + self.alias + "] :: " + message).encode("utf-8"))
 
                     time.sleep(0.2)
                 except:
-                    self.sock.sendto(("[" + self.alias + "] <= left chat ").encode("utf-8"), self.server)
+                    self.sock.send(("[" + self.alias + "] <= left chat ").encode("utf-8"))
                     self.shutdown = True
 
         iThread.join()

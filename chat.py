@@ -35,10 +35,8 @@ class Server:
         while True:
             c, a = self.sock.accept()
             cThread = threading.Thread(target=self.handler, args=(c, a))
-            # cThread.daemon = True
             cThread.start()
             self.connections.append(c)
-            # print(str(a[0]) + ':' + str(a[1]), "connected")
 
 
 class Client:
@@ -48,6 +46,21 @@ class Client:
     alias = ''
 
     def sendMsg(self):
+        while True:
+            data = self.sock.recv(1024)
+            if not data:
+                break
+            print(str(data, 'utf-8'))
+
+    def __init__(self, address, name=str(socket.gethostbyname(socket.gethostname()))):
+        self.sock.connect((address, 10000))
+
+        self.alias = name
+
+        iThread = threading.Thread(target=self.sendMsg)
+        # iThread.daemon = True
+        iThread.start()
+
         while True:
             if not self.join:
                 self.sock.send(("[" + self.alias + "] => join chat ").encode("utf-8"))
@@ -61,26 +74,6 @@ class Client:
                 time.sleep(0.2)
             except:
                 pass
-                # self.sock.send(("[" + self.alias + "] <= left chat ").encode("utf-8"))
-                # self.shutdown = True
-            # raise
-
-        # self.sock.send(("[" + self.alias + "] :: " + input("")).encode("utf-8"))
-
-    def __init__(self, address, name=str(socket.gethostbyname(socket.gethostname()))):
-        self.sock.connect((address, 10000))
-
-        self.alias = name
-
-        iThread = threading.Thread(target=self.sendMsg)
-        # iThread.daemon = True
-        iThread.start()
-
-        while True:
-            data = self.sock.recv(1024)
-            if not data:
-                break
-            print(str(data, 'utf-8'))
 
 
 if len(sys.argv) == 3:
