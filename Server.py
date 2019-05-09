@@ -5,6 +5,8 @@ import threading
 
 class Server:
     clients = []
+    shutdown = False
+    count = 0
 
     def __init__(self, prot):
         self.host = socket.gethostbyname(socket.gethostname())
@@ -12,61 +14,68 @@ class Server:
         if prot == 'TCP':
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.bind((self.host, self.port))
-            self.sock.listen(1)
+            self.sock.listen(self.count)
             self.runTCP()
         elif prot == 'UDP':
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.bind((self.host, self.port))
             self.runUDP()
 
-    def handler(self, c, a):
+    def handler(self, conn, addr):
         while True:
             try:
-                data = c.recv(1024)
+                data = conn.recv(1024)
 
                 itsatime = time.strftime("%Y-%m-%d-%H.%M.%S", time.localtime())
-                print("[" + str(a[0]) + "]=[" + str(a[1]) + "]=[" + itsatime + "]/", end="")
+                print("[" + str(addr[0]) + "]=[" + str(addr[1]) + "]=[" + itsatime + "]/", end="")
                 print(data.decode("utf-8"))
 
                 for client in self.clients:
-                    if client != c:
+                    if client != conn:
                         client.send(data)
             except:
-                print(str(a[0]) + ':' + str(a[1]), "disconnected")
-                self.clients.remove(c)
-                c.close()
+                self.clients.remove(conn)
+                conn.close()
+                self.count -= 1
+                if self.count < 1:
+                    print('[ Server Stopped ]')
+                    self.shutdown = True
+                    self.sock.close()
                 break
 
     def runTCP(self):
         print('[ TCP Server Started ]')
         print('Hosted by address: ', self.host)
-        while True:
-            c, a = self.sock.accept()
-            cThread = threading.Thread(target=self.handler, args=(c, a))
-            cThread.start()
-            self.clients.append(c)
+        while not self.shutdown:
+            try:
+                conn, addr = self.sock.accept()
+                cThread = threading.Thread(target=self.handler, args=(conn, addr))
+                cThread.start()
+                self.clients.append(conn)
+                self.count += 1
+            except:
+                pass
 
     def runUDP(self):
-        quit = False
         print('[ UDP Server Started ]')
         print('Hosted by address: ', self.host)
-        while not quit:
+        while not self.shutdown:
             try:
-                d, a = self.sock.recvfrom(1024)
-                if a not in self.clients:
-                    self.clients.append(a)
+                data, addr = self.sock.recvfrom(1024)
+                if addr not in self.clients:
+                    self.clients.append(addr)
 
                 itsatime = time.strftime("%d.%m.%Y-%H:%M:%S", time.localtime())
 
-                print("[" + str(a[0]) + ':' + str(a[1]) + "]/[" + itsatime + "]/", end="")
-                print(d.decode("utf-8"))
+                print("[" + str(addr[0]) + ':' + str(addr[1]) + "]/[" + itsatime + "]/", end="")
+                print(data.decode("utf-8"))
 
-                for c in self.clients:
-                    if a != c:
-                        self.sock.sendto(d, c)
+                for client in self.clients:
+                    if addr != client:
+                        self.sock.sendto(data, client)
             except:
                 print('[ Server Stopped ]')
-                quit = True
+                self.shutdown = True
         self.sock.close()
 
 
